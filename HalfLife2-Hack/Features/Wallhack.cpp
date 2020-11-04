@@ -2,10 +2,11 @@
 #include "../mainhack.h"
 
 bool OnEntityList(int entityType);
-void DrawESPBox(Entity* ent, vec2 screen, LPDIRECT3DDEVICE9* pDevice);
+void DrawESPBox(EntityData entityData, vec2 screen, LPDIRECT3DDEVICE9* pDevice);
 void DrawOutline(float x, float y, float width, float height, float lineWidth, D3DCOLOR color, LPDIRECT3DDEVICE9* pDevice);
 void DrawLine(float xSrc, float ySrc, float xDst, float yDst, int thickness, D3DCOLOR color, LPDIRECT3DDEVICE9 pDevice);
 bool WorldToScreen(vec3 pos, vec2& screen, float matrix[4][4], int windowWidth, int windowHeight);
+void AssignEntityData(EntityData* entityData, Entity* entity);
 
 int windowWidth = 1176;
 int windowHeight = 664;
@@ -31,9 +32,9 @@ void Hack::Wallhack::GetEntities(int fpsLimit, int loopNumber)
 		{
 			if (ent.entPtr && ent.entPtr->entityType && OnEntityList(ent.entPtr->entityType))
 			{
-				Hack::Data::entities.push_back(ent.entPtr);
-				//Hack::Data::entities.push_back(ent.entPtr);
-				//ent.entPtr->health = 0;
+				EntityData entityData;
+				AssignEntityData(&entityData, ent.entPtr);
+				Hack::Data::entities.push_back(entityData);
 			}
 		}
 	}
@@ -43,12 +44,12 @@ void Hack::Wallhack::Draw(LPDIRECT3DDEVICE9* pDevice)
 {
 	for (int i = 0; i < Hack::Data::entities.size(); i++)
 	{
-		if (Hack::Data::entities[i]) //only displaying the first entity for testing purposes
+		if (Hack::Data::entities[i].entity)
 		{
 			vec3 center;
-			center.x = Hack::Data::entities[i]->xPosition;//x is horizontal
-			center.z = Hack::Data::entities[i]->yPosition;//z is vertical
-			center.y = Hack::Data::entities[i]->zPosition;//y is horizontal
+			center.x = Hack::Data::entities[i].entity->xPosition;//x is horizontal
+			center.z = Hack::Data::entities[i].entity->yPosition;//z is vertical
+			center.y = Hack::Data::entities[i].entity->zPosition;//y is horizontal
 
 			vec2 screenCoords;
 
@@ -60,22 +61,31 @@ void Hack::Wallhack::Draw(LPDIRECT3DDEVICE9* pDevice)
 	}
 }
 
-void DrawESPBox(Entity* ent, vec2 screen, LPDIRECT3DDEVICE9* pDevice)
+void DrawESPBox(EntityData entityData, vec2 screen, LPDIRECT3DDEVICE9* pDevice)
 {
 	vec3 playerPos;
 	playerPos.x = *(float*)Hack::Data::xPlayerPosition;
 	playerPos.z = *(float*)Hack::Data::zPlayerPosition;
 	playerPos.y = *(float*)Hack::Data::yPlayerPosition;
 
-	float dist = sqrt(pow((ent->xPosition - playerPos.x), 2) + pow((ent->yPosition - playerPos.y), 2) + pow((ent->zPosition - playerPos.z), 2));
+	float distance = sqrt(pow((entityData.entity->xPosition - playerPos.x), 2) + pow((entityData.entity->yPosition - playerPos.y), 2) + pow((entityData.entity->zPosition - playerPos.z), 2));
 
-	float scale = 20;//(windowHeight / dist) * (viewport[2] / windowWidth);
-	float x = screen.x - scale;
-	float y = screen.y - scale * entityAspectRatio;
-	float width = scale * 2;
-	float height = scale * entityAspectRatio * 2;
+	float width = entityData.width / distance;
+	float height = entityData.height / distance;
+	float x, y;
 
-	DrawOutline(x, y, width, height, 2, D3DCOLOR_ARGB(255, 0, 0, 255), pDevice);
+	if (entityData.center)
+	{
+		x = screen.x - (width);
+		y = screen.y - (height / 2);
+	}
+	else
+	{
+		x = screen.x - (width);
+		y = screen.y - (height);
+	}
+
+	DrawOutline(x, y, width, height, 2, entityData.color, pDevice);
 }
 
 void ESP()
@@ -85,13 +95,13 @@ void ESP()
 void DrawOutline(float x, float y, float width, float height, float lineWidth, D3DCOLOR color, LPDIRECT3DDEVICE9* pDevice)
 {
 	//left
-	DrawLine(x, y, x, y + height, lineWidth, D3DCOLOR_ARGB(255, 0, 0, 255), *pDevice);
+	DrawLine(x, y, x, y + height, lineWidth, color, *pDevice);
 	//top
-	DrawLine(x, y, x + width, y, lineWidth, D3DCOLOR_ARGB(255, 0, 0, 255), *pDevice);
+	DrawLine(x, y, x + width, y, lineWidth, color, *pDevice);
 	//right
-	DrawLine(x + width, y, x + width, y + height, lineWidth, D3DCOLOR_ARGB(255, 0, 0, 255), *pDevice);
+	DrawLine(x + width, y, x + width, y + height, lineWidth, color, *pDevice);
 	//bottom
-	DrawLine(x, y + height, x + width, y + height, lineWidth, D3DCOLOR_ARGB(255, 0, 0, 255), *pDevice);
+	DrawLine(x, y + height, x + width, y + height, lineWidth, color, *pDevice);
 }
 
 void DrawLine(float xSrc, float ySrc, float xDst, float yDst, int thickness, D3DCOLOR color, LPDIRECT3DDEVICE9 pDevice)
@@ -108,7 +118,6 @@ void DrawLine(float xSrc, float ySrc, float xDst, float yDst, int thickness, D3D
 
 bool WorldToScreen(vec3 pos, vec2& screen, float matrix[4][4], int windowWidth, int windowHeight)
 {
-	//Matrix-vector Product, multiplying world(eye) coordinates by projection matrix = clipCoords
 	vec4 clipCoords;
 	clipCoords.x = pos.x * matrix[0][0] + pos.y * matrix[0][1] + pos.z * matrix[0][2] + matrix[0][3];
 	clipCoords.y = pos.x * matrix[1][0] + pos.y * matrix[1][1] + pos.z * matrix[1][2] + matrix[1][3];
@@ -118,7 +127,6 @@ bool WorldToScreen(vec3 pos, vec2& screen, float matrix[4][4], int windowWidth, 
 	if (clipCoords.w < 0.1f)
 		return false;
 
-	//perspective division, dividing by clip.W = Normalized Device Coordinates
 	vec3 NDC;
 	NDC.x = clipCoords.x / clipCoords.w;
 	NDC.y = clipCoords.y / clipCoords.w;
@@ -129,10 +137,31 @@ bool WorldToScreen(vec3 pos, vec2& screen, float matrix[4][4], int windowWidth, 
 	return true;
 }
 
+void AssignEntityData(EntityData* entityData, Entity* entity)
+{
+	for (int i = 0; i < Hack::Data::entitiesToESP.size(); i++)
+	{
+		if (Hack::Data::entitiesToESP[i].entityType == entity->entityType)
+		{
+			entityData->entity = entity;
+			entityData->center = Hack::Data::entitiesToESP[i].center;
+			entityData->width = Hack::Data::entitiesToESP[i].width;
+			entityData->height = Hack::Data::entitiesToESP[i].height;
+			entityData->color = Hack::Data::entitiesToESP[i].color;
+
+			break;
+		}
+	}
+}
+
 bool OnEntityList(int entityType)
 {
-	if (std::count(Hack::Data::entitiesToESP.begin(), Hack::Data::entitiesToESP.end(), entityType))
-		return true;
-	else
-		return false;
+	for (int i = 0; i < Hack::Data::entitiesToESP.size(); i++)
+	{
+		if (Hack::Data::entitiesToESP[i].entityType == entityType)
+		{
+			return true;
+		}
+	}
+	return false;
 }

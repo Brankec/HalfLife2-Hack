@@ -19,12 +19,10 @@ void Hack::Run(int *fpsLimit, int loopNumber)
 	{
 		Init();
 
-		Hack::Data::cbEntityList = (CBaseEntityList*)(Hack::Data::server + 0x634164);
-		Hack::Data::viewMatrix = (ViewMatrix*)(Hack::Data::engine + 0x58BAA8);
-
 		Data::bInitialized = true;
 	}
 
+	//bad memory address
 	//if (*Data::IsLoading != 0)
 	//{
 	//	Data::bInitialized = false;
@@ -57,9 +55,26 @@ void Init()
 	Hack::Data::fovBase = (uintptr_t*)(Hack::Data::engine + HL2::Offsets::Engine::fovBase);
 	Hack::Data::fov = (uintptr_t*)(*Hack::Data::fovBase + HL2::Offsets::Engine::fov);
 	Hack::Data::timeScale = (uintptr_t*)(Hack::Data::engine + HL2::Offsets::Engine::timeScale);
+	Hack::Data::cbEntityList = (CBaseEntityList*)(Hack::Data::server + 0x634164);
+	Hack::Data::viewMatrix = (ViewMatrix*)(Hack::Data::engine + 0x58BAA8);
 
-	Hack::Data::entitiesToESP.push_back(*(uintptr_t*)*(uintptr_t*)(Hack::Data::server + 0x634914)); //CNPC_CScanner 
-	Hack::Data::entitiesToESP.push_back(*(uintptr_t*)*(uintptr_t*)(Hack::Data::server + 0x6361B4)); //CNPC_Citizen 
+	EntityInfo entityInfo;
+	Hack::Data::entitiesToESP.clear();
+
+	entityInfo.entityType = *(uintptr_t*)*(uintptr_t*)(Hack::Data::server + 0x634914); //CNPC_CScanner 
+	entityInfo.height = 18600;
+	entityInfo.width = 18600;
+	entityInfo.center = true;
+	entityInfo.color = D3DCOLOR_ARGB(255, 0, 0, 255);
+	Hack::Data::entitiesToESP.push_back(entityInfo); 
+
+	entityInfo.entityType = *(uintptr_t*)*(uintptr_t*)(Hack::Data::server + 0x6361B4); //CNPC_Citizen 
+	entityInfo.height = 37200;
+	entityInfo.width = 18600;
+	entityInfo.center = false;
+	entityInfo.color = D3DCOLOR_ARGB(255, 255, 0, 255);
+	Hack::Data::entitiesToESP.push_back(entityInfo); //CNPC_Citizen 
+
 	//Hack::Data::entitiesToESP.push_back(0x7AA932B4); //CPNC_Vortigaunt 
 	//faulty address
 	//Hack::Data::entitiesToESP.push_back(*(uintptr_t*)*(uintptr_t*)(Hack::Data::server + 0x637054)); //CNC_MetroPolice
@@ -82,8 +97,8 @@ namespace Hack
 		uintptr_t* ingameCheats;
 
 		//Wallhack
-		std::vector<Entity*> entities;
-		std::vector<uintptr_t> entitiesToESP;
+		std::vector<EntityData> entities;
+		std::vector<EntityInfo> entitiesToESP;
 		ViewMatrix* viewMatrix;
 		ID3DXLine* dxLine;
 		CBaseEntityList* cbEntityList;

@@ -48,11 +48,26 @@ public:
 static_assert(sizeof(Entity) == 0x14C);
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+//for actually storing enemy data
+class EntityData
+{
+public:
+	Entity* entity;
+	float height;
+	float width;
+	bool center;
+	D3DCOLOR color;
+};
+
+//Used for defining information for each enemy type
 class EntityInfo
 {
 public:
+	uintptr_t entityType;
 	float height;
 	float width;
+	bool center;
+	D3DCOLOR color;
 };
 
 

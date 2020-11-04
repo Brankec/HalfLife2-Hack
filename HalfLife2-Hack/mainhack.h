@@ -92,8 +92,8 @@ namespace Hack
 		extern uintptr_t* ingameCheats;
 
 		//Wallhack
-		extern std::vector<Entity*> entities;//list of entities pulled from entityList based on entitiestToESP vector
-		extern std::vector<uintptr_t> entitiesToESP;//list of entities to pull from entityList
+		extern std::vector<EntityData> entities;//list of entities pulled from entityList based on entitiestToESP vector
+		extern std::vector<EntityInfo> entitiesToESP;//list of entities to pull from entityList
 		extern ViewMatrix* viewMatrix;
 		extern ID3DXLine* dxLine;
 		extern CBaseEntityList* cbEntityList;

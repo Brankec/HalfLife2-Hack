@@ -1,6 +1,6 @@
-// dllmain.cpp : Defines the entry point for the DLL application.
 #include "WndHook.h"
 
+//all game hacking logic is done inside mainhack.cpp
 DWORD WINAPI MainThread(PVOID base)
 {
     WndHook::Hook(base);
