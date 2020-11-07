@@ -9,7 +9,7 @@ void Hack::Draw(HWND* window, LPDIRECT3DDEVICE9* pDevice)
 
 	if (Hack::Data::bWallhack)
 	{
-		Hack::Wallhack::Draw(pDevice);
+		Hack::Wallhack::Draw(window, pDevice);
 	}
 }
 
@@ -102,7 +102,7 @@ namespace Hack
 		ViewMatrix* viewMatrix;
 		ID3DXLine* dxLine;
 		CBaseEntityList* cbEntityList;
-		float WallhackDistance = 5000;
+		float WallhackDistance = 2000;
 
 		//Stats
 		uintptr_t* playerHealth;

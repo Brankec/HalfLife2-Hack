@@ -69,7 +69,7 @@ void Hack::Menu::Draw(HWND* window, LPDIRECT3DDEVICE9* pDevice)
 	{
 		ImGui::Begin("Wallhack Window", &showWallhackMenu);
 		ImGui::Checkbox("Activate", &Data::bWallhack);
-		ImGui::SliderFloat("Distance", &Data::WallhackDistance, 0.f, 10.f);
+		ImGui::SliderFloat("Distance", &Data::WallhackDistance, 100.f, 10000.f);
 		ImGui::End();
 	}
 

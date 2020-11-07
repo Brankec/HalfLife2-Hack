@@ -76,6 +76,6 @@ namespace Hack
 	namespace Wallhack
 	{
 		void GetEntities(int fpsLimit, int loopNumber);
-		void Draw(LPDIRECT3DDEVICE9* pDevice);
+		void Draw(HWND* window, LPDIRECT3DDEVICE9* pDevice);
 	}
 }
